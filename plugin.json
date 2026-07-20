@@ -1,0 +1,125 @@
+{
+  "Id": "73c73b8b-ef35-4d50-a2ca-e53484cd9561",
+  "Name": "Notion",
+  "Description": "Search Notion pages and databases, jump to recent pages, and quick-capture notes from the launcher",
+  "Author": "lmgarret",
+  "Version": "0.0.0",
+  "MinWoxVersion": "2.0.4",
+  "Runtime": "nodejs",
+  "Website": "https://github.com/lmgarret/wox-notion-plugin",
+  "Entry": "index.js",
+  "Icon": "relative:images/app.svg",
+  "TriggerKeywords": ["nt"],
+  "Commands": [
+    {
+      "Command": "add",
+      "Description": "Quick-capture a new page in your configured Notion database"
+    }
+  ],
+  "SupportedOS": ["windows", "linux", "darwin"],
+  "SettingDefinitions": [
+    {
+      "Type": "head",
+      "Value": {
+        "Content": "Notion connection",
+        "Tooltip": ""
+      },
+      "DisabledInPlatforms": [],
+      "IsPlatformSpecific": false
+    },
+    {
+      "Type": "textbox",
+      "Value": {
+        "Key": "notionToken",
+        "Label": "Integration token",
+        "Suffix": "",
+        "DefaultValue": "",
+        "Tooltip": "Secret of your Notion internal integration. Create one at https://www.notion.so/profile/integrations and give it access to the pages you want to search.",
+        "MaxLines": 1,
+        "Validators": [
+          {
+            "Type": "not_empty",
+            "Value": {}
+          }
+        ]
+      },
+      "DisabledInPlatforms": [],
+      "IsPlatformSpecific": false
+    },
+    {
+      "Type": "newline",
+      "Value": {},
+      "DisabledInPlatforms": [],
+      "IsPlatformSpecific": false
+    },
+    {
+      "Type": "head",
+      "Value": {
+        "Content": "Behavior",
+        "Tooltip": ""
+      },
+      "DisabledInPlatforms": [],
+      "IsPlatformSpecific": false
+    },
+    {
+      "Type": "select",
+      "Value": {
+        "Key": "openIn",
+        "Label": "Open pages in",
+        "Suffix": "",
+        "DefaultValue": "app",
+        "Tooltip": "Where the default action opens a page. The other target is always available as a secondary action.",
+        "Options": [
+          {
+            "Label": "Notion desktop app",
+            "Value": "app"
+          },
+          {
+            "Label": "Browser",
+            "Value": "browser"
+          }
+        ],
+        "Validators": []
+      },
+      "DisabledInPlatforms": [],
+      "IsPlatformSpecific": false
+    },
+    {
+      "Type": "newline",
+      "Value": {},
+      "DisabledInPlatforms": [],
+      "IsPlatformSpecific": false
+    },
+    {
+      "Type": "head",
+      "Value": {
+        "Content": "Quick capture",
+        "Tooltip": ""
+      },
+      "DisabledInPlatforms": [],
+      "IsPlatformSpecific": false
+    },
+    {
+      "Type": "textbox",
+      "Value": {
+        "Key": "captureDatabaseId",
+        "Label": "Capture database",
+        "Suffix": "",
+        "DefaultValue": "",
+        "Tooltip": "ID or URL of the Notion database that `nt add` creates pages in. Paste the database link from Notion; the ID is extracted automatically.",
+        "MaxLines": 1,
+        "Validators": []
+      },
+      "DisabledInPlatforms": [],
+      "IsPlatformSpecific": false
+    }
+  ],
+  "QueryRequirements": {
+    "AnyQuery": [
+      {
+        "SettingKey": "notionToken",
+        "Message": "Set your Notion integration token in the plugin settings first"
+      }
+    ]
+  }
+}
