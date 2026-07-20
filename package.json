@@ -1,0 +1,59 @@
+{
+  "name": "wox-notion-plugin",
+  "version": "0.0.0",
+  "description": "Notion plugin for Wox launcher 2.0 \u2014 search pages, quick-capture notes, and jump to recent pages",
+  "private": true,
+  "license": "GPL-3.0-only",
+  "author": "lmgarret",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lmgarret/wox-notion-plugin"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "package": "pnpm build && node scripts/package.mjs",
+    "prepare": "simple-git-hooks"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm exec lint-staged",
+    "commit-msg": "pnpm exec commitlint --edit ${1}"
+  },
+  "lint-staged": {
+    "*": "biome check --write --no-errors-on-unmatched --files-ignore-unknown=true"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "simple-git-hooks"
+    ]
+  },
+  "dependencies": {
+    "@notionhq/client": "^5.23.2",
+    "@wox-launcher/wox-plugin": "^0.0.133"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.4",
+    "@commitlint/cli": "^21.2.1",
+    "@commitlint/config-conventional": "^21.2.0",
+    "@types/adm-zip": "^0.5.8",
+    "@types/node": "^26.1.1",
+    "@vitest/coverage-v8": "^4.1.10",
+    "adm-zip": "^0.6.0",
+    "lint-staged": "^17.1.0",
+    "simple-git-hooks": "^2.13.1",
+    "tsup": "^8.5.1",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
+  }
+}
