@@ -26,7 +26,7 @@ Every page result offers three actions: open in the Notion desktop app (with bro
 
 The plugin talks to Notion through an *internal integration* — a personal API token scoped to the pages you choose:
 
-1. Open [notion.so/profile/integrations](https://www.notion.so/profile/integrations) and create a new internal integration for your workspace. `Read content` and `Insert content` capabilities are enough.
+1. Open [app.notion.com/developers/tokens](https://app.notion.com/developers/tokens) and create a new internal integration for your workspace. `Read content` and `Insert content` capabilities are enough.
 2. Copy the integration secret.
 3. In Notion, share the pages/databases you want to search with the integration: open a page → `···` → `Connections` → add your integration. Sub-pages inherit access.
 4. In Wox: `Settings → Plugins → Notion`, paste the secret into **Integration token**.

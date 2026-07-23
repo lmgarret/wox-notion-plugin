@@ -34,7 +34,7 @@
         "Label": "Integration token",
         "Suffix": "",
         "DefaultValue": "",
-        "Tooltip": "Secret of your Notion internal integration. Create one at https://www.notion.so/profile/integrations and give it access to the pages you want to search.",
+        "Tooltip": "Secret of your Notion internal integration. Create one at https://app.notion.com/developers/tokens and give it access to the pages you want to search.",
         "MaxLines": 1,
         "Validators": [
           {
