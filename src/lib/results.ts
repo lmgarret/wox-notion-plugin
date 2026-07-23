@@ -13,6 +13,34 @@ export interface ResultContext {
 
 export const PLUGIN_ICON = { ImageType: "relative", ImageData: "images/app.svg" } as const
 
+/** Stable result id so async previews can target the result via UpdateResult. */
+export function resultId(item: NotionItem): string {
+  return `notion-${item.id}`
+}
+
+function kindLabel(item: NotionItem): string {
+  return item.kind === "database" ? "Notion - Database" : "Notion - Page"
+}
+
+/** Markdown preview shown before (and as a fallback to) fetched page content. */
+export function metadataPreview(item: NotionItem): Result["Preview"] {
+  return {
+    PreviewType: "markdown",
+    PreviewData: `# ${item.title}\n\n${item.url}`,
+    PreviewProperties: {},
+  }
+}
+
+/** Markdown preview built from a page's rendered block content. */
+export function contentPreview(item: NotionItem, markdown: string): NonNullable<Result["Preview"]> {
+  const body = markdown.trim() === "" ? "_This page has no previewable content._" : markdown
+  return {
+    PreviewType: "markdown",
+    PreviewData: `# ${item.title}\n\n${body}`,
+    PreviewProperties: {},
+  }
+}
+
 function openActions(item: NotionItem, rc: ResultContext): ResultAction[] {
   const open = rc.open ?? openUrl
   const app: ResultAction = {
@@ -42,17 +70,15 @@ function openActions(item: NotionItem, rc: ResultContext): ResultAction[] {
 
 export function itemToResult(item: NotionItem, rc: ResultContext, index: number): Result {
   return {
+    Id: resultId(item),
     Title: item.title,
-    SubTitle: item.kind === "database" ? "Database" : "Page",
+    SubTitle: kindLabel(item),
     Icon: item.iconEmoji ? { ImageType: "emoji", ImageData: item.iconEmoji } : PLUGIN_ICON,
     // Wox sorts by score; preserve the API's ranking.
     Score: 1000 - index,
     Tails: item.lastEditedTime ? [{ Type: "text", Text: `edited ${relativeTime(item.lastEditedTime)}` }] : [],
-    Preview: {
-      PreviewType: "markdown",
-      PreviewData: `**${item.title}**\n\n${item.url}`,
-      PreviewProperties: {},
-    },
+    // Replaced with real page content once enrichment fetches it (see query.ts).
+    Preview: metadataPreview(item),
     Actions: [
       ...openActions(item, rc),
       {

@@ -13,11 +13,13 @@ export function makeApi(settings: Record<string, string> = {}) {
     Log: vi.fn(async () => {}),
     Notify: vi.fn(async () => {}),
     Copy: vi.fn(async () => {}),
+    UpdateResult: vi.fn(async () => true),
   } as unknown as PublicAPI & {
     GetSetting: ReturnType<typeof vi.fn>
     Log: ReturnType<typeof vi.fn>
     Notify: ReturnType<typeof vi.fn>
     Copy: ReturnType<typeof vi.fn>
+    UpdateResult: ReturnType<typeof vi.fn>
   }
 }
 
@@ -51,11 +53,13 @@ export function makeService(overrides: Partial<NotionService> = {}): NotionServi
   search: ReturnType<typeof vi.fn>
   recentPages: ReturnType<typeof vi.fn>
   createPage: ReturnType<typeof vi.fn>
+  pageContent: ReturnType<typeof vi.fn>
 } {
   return {
     search: vi.fn(async () => [makeItem()]),
     recentPages: vi.fn(async () => [makeItem()]),
     createPage: vi.fn(async (_db: string, title: string) => makeItem({ title })),
+    pageContent: vi.fn(async () => "Page body"),
     ...overrides,
     // biome-ignore lint/suspicious/noExplicitAny: test double
   } as any

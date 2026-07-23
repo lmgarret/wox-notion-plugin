@@ -1,7 +1,8 @@
 import type { Context, PublicAPI, Query, Result } from "@wox-launcher/wox-plugin"
+import { mapLimit } from "./lib/async.js"
 import { TtlCache } from "./lib/cache.js"
 import { openPage, openUrl, type UrlOpener } from "./lib/open.js"
-import { itemToResult, messageResult, PLUGIN_ICON } from "./lib/results.js"
+import { contentPreview, itemToResult, messageResult, PLUGIN_ICON, resultId } from "./lib/results.js"
 import { NotionAuthError, type NotionService } from "./notion/client.js"
 import type { NotionItem } from "./notion/types.js"
 import { loadSettings, type PluginSettings } from "./settings.js"
@@ -10,8 +11,10 @@ export const CAPTURE_COMMAND = "add"
 const SEARCH_LIMIT = 20
 const RECENT_LIMIT = 10
 const RECENT_CACHE_TTL_MS = 30_000
+const PREVIEW_CONCURRENCY = 4
+const CONTENT_CACHE_MAX = 200
 
-const INTEGRATIONS_URL = "https://www.notion.so/profile/integrations"
+const INTEGRATIONS_URL = "https://app.notion.com/developers/tokens"
 const CAPTURE_DOCS_URL = "https://github.com/lmgarret/wox-notion-plugin#quick-capture"
 
 export interface QueryDeps {
@@ -43,7 +46,47 @@ export function createQueryHandler(deps: QueryDeps) {
   const { api } = deps
   const open = deps.open ?? openUrl
   const recentCache = new TtlCache<NotionItem[]>(RECENT_CACHE_TTL_MS)
+  // Rendered page content keyed by `${pageId}:${lastEditedTime}` so edits bust it.
+  const contentCache = new Map<string, string>()
   let cachedToken = ""
+
+  function cacheContent(key: string, markdown: string): void {
+    contentCache.set(key, markdown)
+    if (contentCache.size > CONTENT_CACHE_MAX) {
+      const oldest = contentCache.keys().next().value
+      if (oldest !== undefined) {
+        contentCache.delete(oldest)
+      }
+    }
+  }
+
+  /**
+   * Fetches page content for the shown page results and swaps it into their
+   * preview panels via UpdateResult. Fire-and-forget: previews arrive shortly
+   * after the result list, so search-as-you-type stays responsive. Per-page
+   * failures are logged and skipped, leaving the metadata preview in place.
+   */
+  async function enrichPreviews(ctx: Context, items: NotionItem[], settings: PluginSettings): Promise<void> {
+    if (typeof api.UpdateResult !== "function") {
+      return
+    }
+    const pages = items.filter((item) => item.kind === "page")
+    const service = deps.getService(settings.token)
+    await mapLimit(pages, PREVIEW_CONCURRENCY, async (item) => {
+      const key = `${item.id}:${item.lastEditedTime ?? ""}`
+      let markdown = contentCache.get(key)
+      if (markdown === undefined) {
+        try {
+          markdown = await service.pageContent(item.id)
+        } catch (error) {
+          await api.Log(ctx, "Warning", `Preview fetch failed for ${item.id}: ${error}`)
+          return
+        }
+        cacheContent(key, markdown)
+      }
+      await api.UpdateResult(ctx, { Id: resultId(item), Preview: contentPreview(item, markdown) })
+    })
+  }
 
   function openUrlAction(name: string, url: string) {
     return {
@@ -113,30 +156,38 @@ export function createQueryHandler(deps: QueryDeps) {
     ]
   }
 
-  async function recent(settings: PluginSettings): Promise<Result[]> {
+  function toResults(items: NotionItem[], settings: PluginSettings): Result[] {
+    return items.map((item, index) => itemToResult(item, { api, openIn: settings.openIn, open }, index))
+  }
+
+  async function recent(settings: PluginSettings): Promise<{ items: NotionItem[]; results: Result[] }> {
     let items = recentCache.get()
     if (!items) {
       items = await deps.getService(settings.token).recentPages(RECENT_LIMIT)
       recentCache.set(items)
     }
-    return items.map((item, index) => itemToResult(item, { api, openIn: settings.openIn, open }, index))
+    return { items, results: toResults(items, settings) }
   }
 
-  async function search(term: string, settings: PluginSettings): Promise<Result[]> {
+  async function search(term: string, settings: PluginSettings): Promise<{ items: NotionItem[]; results: Result[] }> {
     const items = await deps.getService(settings.token).search(term, SEARCH_LIMIT)
     if (items.length === 0) {
-      return [messageResult(`No results for "${term}"`, "Only pages shared with your integration are searchable")]
+      return {
+        items,
+        results: [messageResult(`No results for "${term}"`, "Only pages shared with your integration are searchable")],
+      }
     }
-    return items.map((item, index) => itemToResult(item, { api, openIn: settings.openIn, open }, index))
+    return { items, results: toResults(items, settings) }
   }
 
-  return async (ctx: Context, query: Query): Promise<Result[]> => {
+  const handler = async (ctx: Context, query: Query): Promise<Result[]> => {
     const settings = await loadSettings(ctx, api)
     if (!settings.token) {
       return [missingTokenResult()]
     }
     if (settings.token !== cachedToken) {
       recentCache.clear()
+      contentCache.clear()
       cachedToken = settings.token
     }
 
@@ -145,10 +196,11 @@ export function createQueryHandler(deps: QueryDeps) {
       if (text !== null) {
         return await capture(text, settings)
       }
-      if (query.Search.trim() === "") {
-        return await recent(settings)
-      }
-      return await search(query.Search.trim(), settings)
+      const { items, results } =
+        query.Search.trim() === "" ? await recent(settings) : await search(query.Search.trim(), settings)
+      // Enrich previews after returning the list so the UI stays responsive.
+      void enrichPreviews(ctx, items, settings).catch(() => {})
+      return results
     } catch (error) {
       if (error instanceof NotionAuthError) {
         return [invalidTokenResult()]
@@ -159,4 +211,7 @@ export function createQueryHandler(deps: QueryDeps) {
       ]
     }
   }
+
+  // enrichPreviews is exposed for tests; production calls it fire-and-forget.
+  return Object.assign(handler, { enrichPreviews })
 }

@@ -1,5 +1,13 @@
-import type { DataSourceObjectResponse, PageObjectResponse } from "@notionhq/client"
-import { APIErrorCode, Client, isFullPage, isFullPageOrDataSource, isNotionClientError } from "@notionhq/client"
+import type { BlockObjectResponse, DataSourceObjectResponse, PageObjectResponse } from "@notionhq/client"
+import {
+  APIErrorCode,
+  Client,
+  isFullBlock,
+  isFullPage,
+  isFullPageOrDataSource,
+  isNotionClientError,
+} from "@notionhq/client"
+import { blocksToMarkdown } from "./blocks.js"
 import type { NotionItem } from "./types.js"
 
 /** Thrown when the Notion API rejects the configured integration token. */
@@ -17,6 +25,8 @@ export interface NotionService {
   recentPages(limit?: number): Promise<NotionItem[]>
   /** Creates a page titled `title` in the given database and returns it. */
   createPage(databaseId: string, title: string): Promise<NotionItem>
+  /** Renders a page's top-level content to a markdown preview. */
+  pageContent(pageId: string, limit?: number): Promise<string>
 }
 
 function richTextToPlain(richText: { plain_text: string }[]): string {
@@ -109,6 +119,16 @@ export function createNotionService(token: string): NotionService {
           title,
           url: `https://www.notion.so/${page.id.replaceAll("-", "")}`,
         }
+      } catch (error) {
+        translateError(error)
+      }
+    },
+
+    async pageContent(pageId, limit = 25) {
+      try {
+        const response = await notion.blocks.children.list({ block_id: pageId, page_size: limit })
+        const blocks = response.results.filter(isFullBlock) as BlockObjectResponse[]
+        return blocksToMarkdown(blocks)
       } catch (error) {
         translateError(error)
       }

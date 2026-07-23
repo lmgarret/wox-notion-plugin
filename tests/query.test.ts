@@ -138,3 +138,58 @@ describe("query handler", () => {
     expect(results[0]?.Actions?.[0]).toMatchObject({ Name: "Open in browser", IsDefault: true })
   })
 })
+
+describe("preview enrichment", () => {
+  it("fetches page content and updates the result preview", async () => {
+    const item = makeItem()
+    const service = makeService({ pageContent: vi.fn(async () => "Fetched body") })
+    const { handle, api } = setup({}, service)
+    await handle.enrichPreviews(ctx, [item], { token: TOKEN, captureDatabaseId: "", openIn: "app" })
+
+    expect(service.pageContent).toHaveBeenCalledWith(item.id)
+    expect(api.UpdateResult).toHaveBeenCalledWith(
+      ctx,
+      expect.objectContaining({
+        Id: "notion-2af325e6-8f0c-4290-a06f-baa4e40b4c5d",
+        Preview: expect.objectContaining({ PreviewData: expect.stringContaining("Fetched body") }),
+      }),
+    )
+  })
+
+  it("skips databases, which have no block content", async () => {
+    const service = makeService()
+    const { handle, api } = setup({}, service)
+    await handle.enrichPreviews(ctx, [makeItem({ kind: "database" })], {
+      token: TOKEN,
+      captureDatabaseId: "",
+      openIn: "app",
+    })
+    expect(service.pageContent).not.toHaveBeenCalled()
+    expect(api.UpdateResult).not.toHaveBeenCalled()
+  })
+
+  it("caches content across calls, keyed by last-edited time", async () => {
+    const item = makeItem()
+    const service = makeService({ pageContent: vi.fn(async () => "body") })
+    const { handle } = setup({}, service)
+    const settings = { token: TOKEN, captureDatabaseId: "", openIn: "app" as const }
+    await handle.enrichPreviews(ctx, [item], settings)
+    await handle.enrichPreviews(ctx, [item], settings)
+    expect(service.pageContent).toHaveBeenCalledTimes(1)
+
+    await handle.enrichPreviews(ctx, [makeItem({ lastEditedTime: "2026-07-21T00:00:00Z" })], settings)
+    expect(service.pageContent).toHaveBeenCalledTimes(2)
+  })
+
+  it("logs and skips a page whose content fetch fails, leaving its preview untouched", async () => {
+    const service = makeService({
+      pageContent: vi.fn(async () => {
+        throw new Error("boom")
+      }),
+    })
+    const { handle, api } = setup({}, service)
+    await handle.enrichPreviews(ctx, [makeItem()], { token: TOKEN, captureDatabaseId: "", openIn: "app" })
+    expect(api.Log).toHaveBeenCalledWith(expect.anything(), "Warning", expect.stringContaining("boom"))
+    expect(api.UpdateResult).not.toHaveBeenCalled()
+  })
+})

@@ -13,9 +13,16 @@ describe("itemToResult", () => {
     expect(result.Icon).toEqual({ ImageType: "relative", ImageData: "images/app.svg" })
   })
 
-  it("labels databases in the subtitle", () => {
-    const result = itemToResult(makeItem({ kind: "database" }), { api: makeApi(), openIn: "app" }, 0)
-    expect(result.SubTitle).toBe("Database")
+  it("prefixes the subtitle with the Notion source and object kind", () => {
+    const page = itemToResult(makeItem(), { api: makeApi(), openIn: "app" }, 0)
+    expect(page.SubTitle).toBe("Notion - Page")
+    const database = itemToResult(makeItem({ kind: "database" }), { api: makeApi(), openIn: "app" }, 0)
+    expect(database.SubTitle).toBe("Notion - Database")
+  })
+
+  it("assigns a stable id so async previews can target the result", () => {
+    const result = itemToResult(makeItem(), { api: makeApi(), openIn: "app" }, 0)
+    expect(result.Id).toBe("notion-2af325e6-8f0c-4290-a06f-baa4e40b4c5d")
   })
 
   it("preserves API ranking through descending scores", () => {
