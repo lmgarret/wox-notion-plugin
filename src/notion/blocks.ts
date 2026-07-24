@@ -1,7 +1,14 @@
 import type { BlockObjectResponse, RichTextItemResponse } from "@notionhq/client"
 
-const MAX_BLOCKS = 40
+const MAX_LINES = 60
 const MAX_CHARS = 2500
+const INDENT = "  "
+
+/** A block together with its (already-fetched) child blocks. */
+export interface BlockNode {
+  block: BlockObjectResponse
+  children: BlockNode[]
+}
 
 function plainText(richText: RichTextItemResponse[]): string {
   return richText.map((part) => part.plain_text).join("")
@@ -19,6 +26,7 @@ function blockRichText(block: BlockObjectResponse): RichTextItemResponse[] {
   return []
 }
 
+/** Renders one block to a markdown line, or null when it carries no previewable text. */
 function renderBlock(block: BlockObjectResponse): string | null {
   const text = plainText(blockRichText(block))
   switch (block.type) {
@@ -53,21 +61,44 @@ function renderBlock(block: BlockObjectResponse): string | null {
   }
 }
 
-/** Renders a page's top-level blocks to a compact markdown preview. */
-export function blocksToMarkdown(blocks: BlockObjectResponse[]): string {
-  const lines: string[] = []
-  let chars = 0
-  for (const block of blocks.slice(0, MAX_BLOCKS)) {
-    const rendered = renderBlock(block)
-    if (rendered === null) {
-      continue
+/** Indents every line of a rendered block by `depth` levels. */
+function indent(rendered: string, depth: number): string {
+  if (depth === 0) {
+    return rendered
+  }
+  const pad = INDENT.repeat(depth)
+  return rendered
+    .split("\n")
+    .map((line) => pad + line)
+    .join("\n")
+}
+
+function collect(nodes: BlockNode[], depth: number, lines: string[]): boolean {
+  for (const node of nodes) {
+    const rendered = renderBlock(node.block)
+    if (rendered !== null) {
+      lines.push(indent(rendered, depth))
+      if (lines.length >= MAX_LINES || lines.join("\n\n").length >= MAX_CHARS) {
+        lines.push(indent("…", depth))
+        return false
+      }
     }
-    lines.push(rendered)
-    chars += rendered.length
-    if (chars >= MAX_CHARS) {
-      lines.push("…")
-      break
+    // Children of collapsible/nested blocks render indented beneath their parent.
+    if (node.children.length > 0 && !collect(node.children, depth + 1, lines)) {
+      return false
     }
   }
+  return true
+}
+
+/** Renders a page's block tree (with expanded children) to a compact markdown preview. */
+export function nodesToMarkdown(nodes: BlockNode[]): string {
+  const lines: string[] = []
+  collect(nodes, 0, lines)
   return lines.join("\n\n")
+}
+
+/** Convenience for a flat list of top-level blocks with no children. */
+export function blocksToMarkdown(blocks: BlockObjectResponse[]): string {
+  return nodesToMarkdown(blocks.map((block) => ({ block, children: [] })))
 }

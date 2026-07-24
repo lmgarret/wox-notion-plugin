@@ -7,8 +7,14 @@ import {
   isFullPageOrDataSource,
   isNotionClientError,
 } from "@notionhq/client"
-import { blocksToMarkdown } from "./blocks.js"
+import { type BlockNode, nodesToMarkdown } from "./blocks.js"
 import type { NotionItem } from "./types.js"
+
+// Bounds on the recursive block-tree fetch so a huge or deeply nested page
+// cannot spend unbounded Notion API calls building a preview.
+const CONTENT_MAX_DEPTH = 3
+const CONTENT_MAX_BLOCKS = 60
+const CONTENT_MAX_API_CALLS = 20
 
 /** Thrown when the Notion API rejects the configured integration token. */
 export class NotionAuthError extends Error {
@@ -25,8 +31,8 @@ export interface NotionService {
   recentPages(limit?: number): Promise<NotionItem[]>
   /** Creates a page titled `title` in the given database and returns it. */
   createPage(databaseId: string, title: string): Promise<NotionItem>
-  /** Renders a page's top-level content to a markdown preview. */
-  pageContent(pageId: string, limit?: number): Promise<string>
+  /** Renders a page's content, expanding collapsible/nested blocks, to a markdown preview. */
+  pageContent(pageId: string): Promise<string>
 }
 
 function richTextToPlain(richText: { plain_text: string }[]): string {
@@ -124,14 +130,40 @@ export function createNotionService(token: string): NotionService {
       }
     },
 
-    async pageContent(pageId, limit = 25) {
+    async pageContent(pageId) {
       try {
-        const response = await notion.blocks.children.list({ block_id: pageId, page_size: limit })
-        const blocks = response.results.filter(isFullBlock) as BlockObjectResponse[]
-        return blocksToMarkdown(blocks)
+        const budget = { blocks: 0, calls: 0 }
+        const nodes = await fetchBlockTree(pageId, 0, budget)
+        return nodesToMarkdown(nodes)
       } catch (error) {
         translateError(error)
       }
     },
+  }
+
+  /** Recursively fetches a block's children, expanding toggles and nested lists within budget. */
+  async function fetchBlockTree(
+    blockId: string,
+    depth: number,
+    budget: { blocks: number; calls: number },
+  ): Promise<BlockNode[]> {
+    if (depth > CONTENT_MAX_DEPTH || budget.calls >= CONTENT_MAX_API_CALLS || budget.blocks >= CONTENT_MAX_BLOCKS) {
+      return []
+    }
+    budget.calls++
+    const response = await notion.blocks.children.list({ block_id: blockId, page_size: 50 })
+    const nodes: BlockNode[] = []
+    for (const block of response.results) {
+      if (!isFullBlock(block)) {
+        continue
+      }
+      if (budget.blocks >= CONTENT_MAX_BLOCKS) {
+        break
+      }
+      budget.blocks++
+      const children = block.has_children ? await fetchBlockTree(block.id, depth + 1, budget) : []
+      nodes.push({ block: block as BlockObjectResponse, children })
+    }
+    return nodes
   }
 }

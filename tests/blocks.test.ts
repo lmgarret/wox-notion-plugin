@@ -1,10 +1,14 @@
 import type { BlockObjectResponse } from "@notionhq/client"
 import { describe, expect, it } from "vitest"
-import { blocksToMarkdown } from "../src/notion/blocks.js"
+import { type BlockNode, blocksToMarkdown, nodesToMarkdown } from "../src/notion/blocks.js"
 
 /** Builds a minimal block object; only the fields the renderer reads matter. */
 function block(type: string, body: unknown): BlockObjectResponse {
   return { type, [type]: body } as unknown as BlockObjectResponse
+}
+
+function node(type: string, body: unknown, children: BlockNode[] = []): BlockNode {
+  return { block: block(type, body), children }
 }
 
 function richText(text: string) {
@@ -61,5 +65,33 @@ describe("blocksToMarkdown", () => {
 
   it("returns an empty string with no blocks", () => {
     expect(blocksToMarkdown([])).toBe("")
+  })
+})
+
+describe("nodesToMarkdown (nested content)", () => {
+  it("expands a toggle's children indented beneath it", () => {
+    const md = nodesToMarkdown([
+      node("toggle", richText("Details"), [
+        node("paragraph", richText("hidden line")),
+        node("bulleted_list_item", richText("hidden bullet")),
+      ]),
+    ])
+    expect(md).toBe("- Details\n\n  hidden line\n\n  - hidden bullet")
+  })
+
+  it("indents deeper for grandchildren", () => {
+    const md = nodesToMarkdown([
+      node("bulleted_list_item", richText("top"), [
+        node("bulleted_list_item", richText("child"), [node("bulleted_list_item", richText("grandchild"))]),
+      ]),
+    ])
+    expect(md).toBe("- top\n\n  - child\n\n    - grandchild")
+  })
+
+  it("indents every line of a multi-line block such as code", () => {
+    const md = nodesToMarkdown([
+      node("toggle", richText("Code"), [node("code", { rich_text: [{ plain_text: "a\nb" }], language: "js" })]),
+    ])
+    expect(md).toBe("- Code\n\n  ```js\n  a\n  b\n  ```")
   })
 })
