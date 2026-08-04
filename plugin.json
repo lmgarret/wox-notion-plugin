@@ -3,20 +3,26 @@
   "Name": "Notion",
   "Description": "Search Notion pages and databases, jump to recent pages, and quick-capture notes from the launcher",
   "Author": "lmgarret",
-  "Version": "0.0.0",
+  "Version": "1.0.0",
   "MinWoxVersion": "2.0.4",
   "Runtime": "nodejs",
   "Website": "https://github.com/lmgarret/wox-notion-plugin",
   "Entry": "index.js",
   "Icon": "relative:images/app.svg",
-  "TriggerKeywords": ["nt"],
+  "TriggerKeywords": [
+    "nt"
+  ],
   "Commands": [
     {
       "Command": "add",
       "Description": "Quick-capture a new page in your configured Notion database"
     }
   ],
-  "SupportedOS": ["windows", "linux", "darwin"],
+  "SupportedOS": [
+    "windows",
+    "linux",
+    "darwin"
+  ],
   "SettingDefinitions": [
     {
       "Type": "head",
