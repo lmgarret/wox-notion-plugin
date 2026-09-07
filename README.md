@@ -20,6 +20,12 @@ Every page result offers three actions: open in the Notion desktop app (with bro
 1. Download the latest `.wox` file from the [releases page](https://github.com/lmgarret/wox-notion-plugin/releases).
 2. Drop it onto the Wox window, or run `wpm install ./wox-notion-plugin-<version>.wox`.
 
+Every release asset carries a [build provenance attestation](https://docs.github.com/actions/security-guides/using-artifact-attestations), so you can confirm it was built by this repository's CI from the tagged commit before installing it:
+
+```sh
+gh attestation verify wox-notion-plugin-<version>.wox --repo lmgarret/wox-notion-plugin
+```
+
 ## Setup
 
 The plugin talks to Notion through an *internal integration* — a personal API token scoped to the pages you choose:
