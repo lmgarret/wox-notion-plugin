@@ -1,7 +1,7 @@
 {
   "name": "wox-notion-plugin",
   "version": "1.0.0",
-  "description": "Notion plugin for Wox launcher 2.0 — search pages, quick-capture notes, and jump to recent pages",
+  "description": "Notion plugin for Wox launcher 2.0 \u2014 search pages, quick-capture notes, and jump to recent pages",
   "private": true,
   "license": "GPL-3.0-only",
   "author": "lmgarret",
@@ -37,7 +37,10 @@
     "onlyBuiltDependencies": [
       "esbuild",
       "simple-git-hooks"
-    ]
+    ],
+    "overrides": {
+      "esbuild": "^0.28.1"
+    }
   },
   "dependencies": {
     "@notionhq/client": "^5.23.2",
