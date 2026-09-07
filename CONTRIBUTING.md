@@ -1,6 +1,8 @@
 # Contributing
 
-Thanks for considering a contribution! This document covers the practical workflow; the [README](README.md#development) describes the toolchain.
+Thanks for considering a contribution! This document covers the practical workflow; the
+[README](README.md#development) describes the toolchain. By participating you agree to the
+[Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Getting started
 

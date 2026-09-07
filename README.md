@@ -5,8 +5,6 @@
 
 A [Notion](https://www.notion.so) plugin for [Wox launcher](https://github.com/Wox-launcher/Wox) 2.x: search your workspace, jump back to recent pages, and capture notes without leaving the keyboard.
 
-> **Status**: incubating. The repository is private while the plugin stabilizes; it is structured for open-sourcing and a Wox plugin store submission once it does.
-
 ## Features
 
 | Query | What happens |
@@ -62,7 +60,7 @@ The stack: TypeScript, [tsup](https://tsup.egoist.dev) (single-file bundle — t
 
 Releases are automated with [release-please](https://github.com/googleapis/release-please): merge commits following [Conventional Commits](https://www.conventionalcommits.org) into `main`, and a release PR accumulates the changelog and version bumps (`package.json` and `plugin.json` stay in sync). Merging the release PR publishes a GitHub release with the `.wox` package attached.
 
-Submitting to the [Wox plugin store](https://github.com/Wox-launcher/Wox) is a post-open-sourcing step: it requires a public repository with a release asset to link in the store manifest.
+The `.wox` asset attached to each release is what the [Wox plugin store](https://github.com/Wox-launcher/Wox) manifest points at.
 
 ## Contributing
 
