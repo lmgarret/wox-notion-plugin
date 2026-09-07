@@ -9,20 +9,14 @@
   "Website": "https://github.com/lmgarret/wox-notion-plugin",
   "Entry": "index.js",
   "Icon": "relative:images/app.svg",
-  "TriggerKeywords": [
-    "nt"
-  ],
+  "TriggerKeywords": ["nt"],
   "Commands": [
     {
       "Command": "add",
       "Description": "Quick-capture a new page in your configured Notion database"
     }
   ],
-  "SupportedOS": [
-    "windows",
-    "linux",
-    "darwin"
-  ],
+  "SupportedOS": ["windows", "linux", "darwin"],
   "SettingDefinitions": [
     {
       "Type": "head",
