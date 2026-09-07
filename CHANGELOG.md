@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.1](https://github.com/lmgarret/wox-notion-plugin/compare/v1.0.0...v1.0.1) (2026-09-07)
+
+
+### Bug Fixes
+
+* **deps:** clear dev-dependency security advisories ([#7](https://github.com/lmgarret/wox-notion-plugin/issues/7)) ([2c0f03f](https://github.com/lmgarret/wox-notion-plugin/commit/2c0f03fdd61496275fabb5775839a2fd9493aebe))
+* **lint:** migrate biome linter preset and format plugin.json ([#3](https://github.com/lmgarret/wox-notion-plugin/issues/3)) ([807ca7b](https://github.com/lmgarret/wox-notion-plugin/commit/807ca7b3ba1dceda7aa79c2d87fe6bec347ef747))
+
 ## 1.0.0 (2026-08-04)
 
 
