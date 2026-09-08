@@ -1,6 +1,6 @@
 // Packages dist/ into a .wox archive (a plain zip with plugin.json, the
 // bundled entry file and images/ at the archive root).
-import { existsSync, readFileSync } from "node:fs"
+import { existsSync } from "node:fs"
 import { join } from "node:path"
 import AdmZip from "adm-zip"
 
@@ -14,8 +14,10 @@ for (const required of ["plugin.json", "index.js", "images"]) {
   }
 }
 
-const manifest = JSON.parse(readFileSync(join(dist, "plugin.json"), "utf8"))
-const outFile = join(root, `wox-notion-plugin-${manifest.Version}.wox`)
+// The filename stays unversioned so that the Wox plugin store manifest can
+// point at a stable `releases/latest/download/wox-notion-plugin.wox` URL; the
+// release tag carries the version.
+const outFile = join(root, "wox-notion-plugin.wox")
 
 const zip = new AdmZip()
 zip.addLocalFolder(dist)
