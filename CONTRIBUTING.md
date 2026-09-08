@@ -41,3 +41,5 @@ CI runs the same checks plus a packaging step on every PR. New behavior should c
 ## Releasing (maintainers)
 
 Merge the release-please PR. That publishes a GitHub release, and CI attaches the `.wox` package built from the tagged commit.
+
+release-please bumps `$.Version` in `plugin.json` by reserializing the whole file with `JSON.stringify`, which always puts array items on their own line. Biome is configured to format `plugin.json` the same way (`json.formatter.expand: "always"` in `biome.json`), so the release PR's diff stays limited to the version line and `pnpm lint` passes on it. Don't reflow `plugin.json` by hand.
