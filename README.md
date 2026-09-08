@@ -15,15 +15,19 @@ A [Notion](https://www.notion.so) plugin for [Wox launcher](https://github.com/W
 
 Every page result offers three actions: open in the Notion desktop app (with browser fallback), open in the browser, and copy the page link. The default open target is configurable.
 
+![Searching Notion pages from Wox, with a page preview in the side panel](docs/screenshots/search.png)
+
+![Quick-capturing a new page with `nt add`](docs/screenshots/quick-capture.png)
+
 ## Installation
 
 1. Download the latest `.wox` file from the [releases page](https://github.com/lmgarret/wox-notion-plugin/releases).
-2. Drop it onto the Wox window, or run `wpm install ./wox-notion-plugin-<version>.wox`.
+2. Drop it onto the Wox window, or run `wpm install ./wox-notion-plugin.wox`.
 
 Every release asset carries a [build provenance attestation](https://docs.github.com/actions/security-guides/using-artifact-attestations), so you can confirm it was built by this repository's CI from the tagged commit before installing it:
 
 ```sh
-gh attestation verify wox-notion-plugin-<version>.wox --repo lmgarret/wox-notion-plugin
+gh attestation verify wox-notion-plugin.wox --repo lmgarret/wox-notion-plugin
 ```
 
 ## Setup
@@ -55,7 +59,7 @@ pnpm dev             # rebuild dist/ on change
 pnpm test            # unit tests (Vitest)
 pnpm lint            # lint + format check (Biome)
 pnpm typecheck       # TypeScript
-pnpm package         # build and produce wox-notion-plugin-<version>.wox
+pnpm package         # build and produce wox-notion-plugin.wox
 ```
 
 `pnpm build` produces a complete plugin directory in `dist/` (bundled `index.js`, `plugin.json`, `images/`). To iterate against a real Wox instance, add `dist/` as a local plugin directory in Wox's dev settings and reload the plugin after rebuilds.
@@ -66,7 +70,7 @@ The stack: TypeScript, [tsup](https://tsup.egoist.dev) (single-file bundle — t
 
 Releases are automated with [release-please](https://github.com/googleapis/release-please): merge commits following [Conventional Commits](https://www.conventionalcommits.org) into `main`, and a release PR accumulates the changelog and version bumps (`package.json` and `plugin.json` stay in sync). Merging the release PR publishes a GitHub release with the `.wox` package attached.
 
-The `.wox` asset attached to each release is what the [Wox plugin store](https://github.com/Wox-launcher/Wox) manifest points at.
+The asset filename is unversioned (`wox-notion-plugin.wox`) so that the [Wox plugin store](https://github.com/Wox-launcher/Wox) manifest can point at a stable `releases/latest/download/` URL: the store's update bot refetches that URL every few hours and opens a PR bumping the published version.
 
 ## Contributing
 
