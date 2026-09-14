@@ -43,7 +43,7 @@
     }
   },
   "dependencies": {
-    "@notionhq/client": "^5.23.2",
+    "@notionhq/client": "^5.26.0",
     "@wox-launcher/wox-plugin": "^0.0.133"
   },
   "devDependencies": {
