@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "@notionhq/client": "^5.23.2",
-    "@wox-launcher/wox-plugin": "^0.0.133"
+    "@wox-launcher/wox-plugin": "^0.0.138"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.4",
