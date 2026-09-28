@@ -47,11 +47,11 @@
     "@wox-launcher/wox-plugin": "^0.0.138"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.13",
-    "@commitlint/cli": "^21.2.2",
-    "@commitlint/config-conventional": "^21.2.2",
+    "@biomejs/biome": "^2.5.14",
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
     "@types/adm-zip": "^0.5.8",
-    "@types/node": "^26.5.1",
+    "@types/node": "^26.6.2",
     "@vitest/coverage-v8": "^4.1.11",
     "adm-zip": "^0.6.1",
     "lint-staged": "^17.5.1",
